@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="TABBA Web — Real-time non-invasive hemoglobin estimation using your phone camera and AI">
+    <meta name="theme-color" content="#0a0e17">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>TABBA Web — Hemoglobin Estimation</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="app-container">
+
+    <!-- ========== HEADER ========== -->
+    <header class="app-header">
+        <div class="app-logo">
+            <div class="logo-icon">🩸</div>
+            <h1 class="app-title">TABBA Web</h1>
+        </div>
+        <p class="app-subtitle">Non-Invasive Hemoglobin Estimation</p>
+    </header>
+
+    <!-- ========== CAMERA SECTION ========== -->
+    <section class="glass-card camera-section" id="camera-section">
+        <div class="card-header">
+            <span class="card-title">
+                📹 Live Camera
+            </span>
+            <span class="card-badge badge-idle" id="session-badge">IDLE</span>
+        </div>
+
+        <div class="camera-container" id="camera-container">
+            <!-- Video feed -->
+            <video class="camera-video hidden" id="camera-video" autoplay playsinline muted></video>
+
+            <!-- Placeholder when camera is off -->
+            <div class="camera-placeholder" id="camera-placeholder">
+                <span class="camera-placeholder-icon">📷</span>
+                <span class="camera-placeholder-text">Tap Start to activate camera</span>
+            </div>
+
+            <!-- Corner guides -->
+            <div class="camera-guide guide-tl"></div>
+            <div class="camera-guide guide-tr"></div>
+            <div class="camera-guide guide-bl"></div>
+            <div class="camera-guide guide-br"></div>
+
+            <!-- Scanning line -->
+            <div class="scan-line" id="scan-line"></div>
+
+            <!-- Status indicator -->
+            <div class="camera-status" id="camera-status">
+                <span class="status-dot" id="status-dot"></span>
+                <span id="status-text">Offline</span>
+            </div>
+
+            <!-- Timer -->
+            <div class="camera-timer hidden" id="camera-timer">00.0s</div>
+
+            <!-- Detection info -->
+            <div class="detection-info hidden" id="detection-info">
+                <span class="detection-chip" id="blood-chip">
+                    <span>🩸</span> <span id="blood-status">—</span>
+                </span>
+                <span class="detection-chip" id="patches-chip">
+                    <span>🎨</span> <span id="patches-status">—</span>
+                </span>
+            </div>
+        </div>
+
+        <!-- Phase indicators -->
+        <div class="phase-indicator hidden" id="phase-indicator">
+            <div class="phase-step" id="phase1-step">
+                <div class="phase-step-label">Phase 1</div>
+                <div class="phase-step-time">0–10s · Stabilizing</div>
+            </div>
+            <div class="phase-step" id="phase2-step">
+                <div class="phase-step-label">Phase 2</div>
+                <div class="phase-step-time">10–15s · Measuring</div>
+            </div>
+            <div class="phase-step" id="final-step">
+                <div class="phase-step-label">✓ Result</div>
+                <div class="phase-step-time">Medical Grade</div>
+            </div>
+        </div>
+
+        <!-- Progress bar -->
+        <div class="progress-section hidden" id="progress-section">
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill" id="progress-fill"></div>
+            </div>
+            <div class="progress-labels">
+                <span>0s</span>
+                <span id="elapsed-label">0.0s</span>
+                <span>15s</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== HG RESULT ========== -->
+    <section class="glass-card" id="result-section">
+        <div class="card-header">
+            <span class="card-title">
+                🔬 Hemoglobin
+            </span>
+            <span class="card-badge badge-idle" id="result-badge">WAITING</span>
+        </div>
+
+        <!-- Waiting state -->
+        <div class="hg-display" id="hg-waiting">
+            <div class="hg-waiting">
+                <div class="hg-waiting-dots">
+                    <span></span><span></span><span></span>
+                </div>
+                <span class="hg-label">Start the session to begin estimation</span>
+            </div>
+        </div>
+
+        <!-- Live preview -->
+        <div class="hg-display hidden" id="hg-preview">
+            <div class="hg-value-wrapper">
+                <span class="hg-value preview" id="hg-preview-value">—</span>
+                <span class="hg-unit">g/dL</span>
+            </div>
+            <div class="hg-label" id="hg-preview-label">⚠️ Live preview — not yet stabilized</div>
+        </div>
+
+        <!-- Stats row -->
+        <div class="stats-row hidden" id="stats-row">
+            <div class="stat-item">
+                <div class="stat-value" id="stat-frames">0</div>
+                <div class="stat-label">Frames</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="stat-phase2">0</div>
+                <div class="stat-label">Phase 2</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="stat-fps">0</div>
+                <div class="stat-label">FPS</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== FINAL RESULT ========== -->
+    <div class="final-result-card" id="final-result-card">
+        <div class="final-badge">✓ Medical-Grade Result</div>
+        <div class="final-hg-value" id="final-hg-value">—</div>
+        <div class="final-hg-unit">g/dL</div>
+        <div class="final-info">
+            Estimated from <strong id="final-frames">0</strong> stable frames
+            using feature-averaged XGBoost inference
+        </div>
+    </div>
+
+    <!-- ========== CONTROLS ========== -->
+    <div class="controls-section">
+        <button class="btn-primary" id="btn-start" onclick="handleStartStop()">
+            ▶ Start Session
+        </button>
+        <label class="btn-secondary" style="display: inline-block; cursor: pointer; margin-top: 15px; padding: 12px 20px; background: rgba(255,255,255,0.1); border-radius: 8px; text-align: center;">
+            📁 Upload Video File
+            <input type="file" id="video-upload" accept="video/*" style="display: none;" onchange="handleFileUpload(event)">
+        </label>
+        <label class="btn-secondary" style="display: inline-block; cursor: pointer; margin-top: 10px; padding: 12px 20px; background: rgba(255,255,255,0.1); border-radius: 8px; text-align: center;">
+            📂 Upload Image Folder
+            <input type="file" id="folder-upload" webkitdirectory directory style="display: none;" onchange="handleFileUpload(event)">
+        </label>
+    </div>
+
+    <!-- ========== FOOTER ========== -->
+    <footer class="app-footer">
+        <p class="footer-text">TABBA Web v1.0 — Powered by XGBoost & YOLOv8</p>
+        <p class="footer-disclaimer">For research and demonstration purposes only. Not a medical device.</p>
+    </footer>
+
+</div>
+
+<!-- Hidden canvas for frame capture -->
+<canvas id="capture-canvas" style="display:none;"></canvas>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

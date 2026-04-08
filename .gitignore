@@ -1,0 +1,9 @@
+__pycache__/
+test_and_debug/
+tmp_uploads/
+.venv/
+*.mp4
+*.jpg
+*.csv
+.DS_Store
+error.log
