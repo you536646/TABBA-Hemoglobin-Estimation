@@ -30,8 +30,9 @@ const STATE = {
     currentFPS: 0,
 };
 
+const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 const CONFIG = {
-    WS_URL: `ws://${window.location.host}/ws`,
+    WS_URL: `${protocol}//${window.location.host}/ws`,
     CAPTURE_INTERVAL: 333,       // 3 FPS = 333ms
     JPEG_QUALITY: 0.80,          // JPEG quality for frame capture
     CANVAS_WIDTH: 640,           // Capture resolution
